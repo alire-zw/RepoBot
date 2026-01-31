@@ -4,7 +4,10 @@ dotenv.config();
 
 const config = {
   BOT_TOKEN: process.env.BOT_TOKEN,
+  /** آدرس وب‌هوک (تلگرام به این آدرس آپدیت می‌فرستد). وقتی از پروکسی استفاده می‌کنید = آدرس پروکسی، مثلاً https://your-proxy.com/proxy.php */
   WEBHOOK: process.env.WEBHOOK,
+  /** وقتی ربات پشت پروکسی است، آدرس پایهٔ API را اینجا بگذارید تا همهٔ درخواست‌های ربات به تلگرام از پروکسی رد شوند؛ مثلاً https://your-proxy.com/proxy.php */
+  TELEGRAM_API_ROOT: process.env.TELEGRAM_API_ROOT || '',
   BOT_NAME: process.env.BOT_NAME || 'فیلترشکن',
   ADMINS: process.env.ADMINS ? process.env.ADMINS.split(',').map(id => id.trim()) : [],
   DB_HOST: process.env.DB_HOST || 'localhost',

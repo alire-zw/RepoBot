@@ -58,6 +58,8 @@ import serverAddTextHandler from './handlers/serverAddTextHandler.js';
 import serverListHandler from './handlers/serverListHandler.js';
 import serverListPageHandler from './handlers/serverListPageHandler.js';
 import serverDetailHandler from './handlers/serverDetailHandler.js';
+import serverEditFieldHandler from './handlers/serverEditFieldHandler.js';
+import serverEditTextHandler from './handlers/serverEditTextHandler.js';
 import serverDeleteHandler from './handlers/serverDeleteHandler.js';
 import serverDeleteConfirmHandler from './handlers/serverDeleteConfirmHandler.js';
 import serverToggleActiveHandler from './handlers/serverToggleActiveHandler.js';
@@ -133,7 +135,10 @@ import panelSettingsBackupChannelForwardHandler from './handlers/panelSettingsBa
 import trialClaimHandler from './handlers/trialClaimHandler.js';
 import { schedulePanelJobs } from './jobs/panelJobs.js';
 
-const bot = new Telegraf(config.BOT_TOKEN);
+const telegramOpts = config.TELEGRAM_API_ROOT
+  ? { telegram: { apiRoot: config.TELEGRAM_API_ROOT.replace(/\/$/, '') } }
+  : {};
+const bot = new Telegraf(config.BOT_TOKEN, telegramOpts);
 
 bot.start(startHandler);
 bot.action('verify_membership', verifyMembershipHandler);
@@ -222,6 +227,7 @@ bot.action('server_add', serverAddHandler);
 bot.action('server_list', serverListHandler);
 bot.action(/^server_list_page_(\d+)$/, serverListPageHandler);
 bot.action(/^server_detail_(\d+)$/, serverDetailHandler);
+bot.action(/^server_edit_.+_\d+$/, serverEditFieldHandler);
 bot.action(/^server_toggle_(\d+)$/, serverToggleActiveHandler);
 bot.action(/^server_refresh_(\d+)$/, serverRefreshHandler);
 bot.action(/^server_delete_(\d+)$/, serverDeleteHandler);
@@ -311,6 +317,8 @@ bot.use(async (ctx, next) => {
 bot.on('text', async (ctx, next) => {
   const serverAddHandled = await serverAddTextHandler(ctx);
   if (serverAddHandled) return;
+  const serverEditHandled = await serverEditTextHandler(ctx);
+  if (serverEditHandled) return;
   const categoryAddHandled = await categoryAddTextHandler(ctx);
   if (categoryAddHandled) return;
   const categoryEditHandled = await categoryEditTextHandler(ctx);

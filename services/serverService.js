@@ -169,6 +169,7 @@ export const deleteServer = async (serverID) => {
 
 /**
  * Build panel base URL. Use https only for port 443; otherwise http (many panels run HTTP on custom ports).
+ * Path gets a trailing slash so requests like /path/panel/... avoid 301 redirects (e.g. /path → /path/).
  */
 export const buildServerURL = (server) => {
   const { serverIP, serverDomain, port, serverPath } = server;
@@ -181,7 +182,7 @@ export const buildServerURL = (server) => {
   }
   if (serverPath) {
     const clean = String(serverPath).replace(/^\/+|\/+$/g, '');
-    if (clean) base += `/${clean}`;
+    if (clean) base += `/${clean}/`;
   }
   return base;
 };
@@ -200,6 +201,7 @@ async function xuiLoginAndGetInbounds(server) {
   let useHttps = u.protocol === 'https:';
   let httpMod = useHttps ? await import('https') : await import('http');
 
+  const REQUEST_TIMEOUT_MS = 20000;
   const doRequest = (mod, opts, body = null) =>
     new Promise((resolve, reject) => {
       const req = mod.request(opts, (res) => {
@@ -215,7 +217,7 @@ async function xuiLoginAndGetInbounds(server) {
       });
       req.on('error', reject);
       req.on('timeout', () => { req.destroy(); reject(new Error('Request timeout')); });
-      req.setTimeout(opts.timeout || 10000);
+      req.setTimeout(opts.timeout ?? REQUEST_TIMEOUT_MS);
       if (body) req.write(body);
       req.end();
     });
@@ -230,7 +232,7 @@ async function xuiLoginAndGetInbounds(server) {
       path: listPath,
       method: 'GET',
       headers: { Accept: 'application/json', Cookie: cookie },
-      timeout: 10000
+      timeout: REQUEST_TIMEOUT_MS
     };
     if (useHttps) opts.rejectUnauthorized = false;
     let listRes = await doRequest(httpMod, opts);
@@ -244,7 +246,7 @@ async function xuiLoginAndGetInbounds(server) {
           path: redirUrl.pathname || listPath,
           method: 'GET',
           headers: { Accept: 'application/json', Cookie: cookie },
-          timeout: 10000
+          timeout: REQUEST_TIMEOUT_MS
         };
         if (redirUrl.protocol === 'https:') opts.rejectUnauthorized = false;
         const mod = redirUrl.protocol === 'https:' ? await import('https') : await import('http');
@@ -453,21 +455,27 @@ export const checkServerConnection = async (server) => {
   }
 };
 
+const FALLBACK_TIMEOUT_MS = 15000;
+
 async function checkServerConnectionFallback(server, baseURL) {
   const url = new URL(baseURL);
   const useHttps = url.protocol === 'https:';
   const httpMod = useHttps ? await import('https') : await import('http');
+  let path = url.pathname || '/';
+  if (path !== '/' && !path.endsWith('/')) path += '/';
+
   const options = {
     hostname: url.hostname,
     port: url.port || (useHttps ? 443 : 80),
-    path: url.pathname || '/',
+    path,
     method: 'GET',
-    timeout: 8000
+    timeout: FALLBACK_TIMEOUT_MS
   };
   if (useHttps) options.rejectUnauthorized = false;
 
   return new Promise((resolve) => {
     const req = httpMod.request(options, (res) => {
+      res.resume();
       const status = res.statusCode || 0;
       if (status === 200 || status === 401 || status === 302 || status === 301) {
         console.log(`[Server] OK fallback: ${server.serverName} - status ${status}`);
@@ -486,7 +494,7 @@ async function checkServerConnectionFallback(server, baseURL) {
       console.log(`[Server] Fallback timeout: ${server.serverName}`);
       resolve({ success: false, error: 'Connection timeout' });
     });
-    req.setTimeout(8000);
+    req.setTimeout(FALLBACK_TIMEOUT_MS);
     req.end();
   });
 }

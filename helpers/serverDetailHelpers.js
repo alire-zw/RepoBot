@@ -12,39 +12,40 @@ function statusText(server) {
 
 /**
  * ساخت کیبورد جزئیات سرور (مشابه فایل ادمین)
- * بدون clientTotalGB، clientExpiryHours، clientVpnHost
+ * دکمه‌های شیشه‌ای مقادیر برای ویرایش: server_edit_فیلد_serverId
  */
 export function getServerDetailKeyboard(server, stats, connectionResult, serverId) {
   const connText = connectionResult && connectionResult.success ? '✅ متصل' : '❌ قطع';
   const isActive = server.isActive === 1 || server.isActive === true || server.isActive === '1';
   const toggleLabel = isActive ? 'غیرفعال کردن' : 'فعال کردن';
+  const sid = String(serverId);
 
   const rows = [
     [{ text: '🖥️ اطلاعات کلی سرور', callback_data: 'server_general_info' }],
     [
-      { text: '📋 نام سرور', callback_data: 'server_name' },
-      { text: '🌐 IP سرور', callback_data: 'server_ip' }
+      { text: '📋 نام سرور', callback_data: `server_edit_serverName_${sid}` },
+      { text: '🌐 IP سرور', callback_data: `server_edit_serverIP_${sid}` }
     ],
     [
-      { text: truncate(server.serverName, 15), callback_data: 'server_name_value' },
-      { text: truncate(server.serverIP, 15), callback_data: 'server_ip_value' }
+      { text: truncate(server.serverName, 15), callback_data: `server_edit_serverName_${sid}` },
+      { text: truncate(server.serverIP, 15), callback_data: `server_edit_serverIP_${sid}` }
     ],
     [
-      { text: '🔗 دامنه', callback_data: 'server_domain' },
-      { text: '🔌 پورت', callback_data: 'server_port' }
+      { text: '🔗 دامنه', callback_data: `server_edit_serverDomain_${sid}` },
+      { text: '🔌 پورت', callback_data: `server_edit_port_${sid}` }
     ],
     [
-      { text: truncate(server.serverDomain, 15), callback_data: 'server_domain_value' },
-      { text: `${server.port}`, callback_data: 'server_port_value' }
+      { text: truncate(server.serverDomain, 15), callback_data: `server_edit_serverDomain_${sid}` },
+      { text: `${server.port}`, callback_data: `server_edit_port_${sid}` }
     ],
     [{ text: '⚙️ تنظیمات', callback_data: 'server_settings_info' }],
     [
-      { text: '📁 Path', callback_data: 'server_path' },
-      { text: '📝 Remark', callback_data: 'server_remark' }
+      { text: '📁 Path', callback_data: `server_edit_serverPath_${sid}` },
+      { text: '📝 Remark', callback_data: `server_edit_remark_${sid}` }
     ],
     [
-      { text: truncate(server.serverPath, 15), callback_data: 'server_path_value' },
-      { text: truncate(server.remark, 20), callback_data: 'server_remark_value' }
+      { text: truncate(server.serverPath, 15), callback_data: `server_edit_serverPath_${sid}` },
+      { text: truncate(server.remark, 20), callback_data: `server_edit_remark_${sid}` }
     ],
     [{ text: '📊 آمار و وضعیت', callback_data: 'server_stats_info' }],
     [

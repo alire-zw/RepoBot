@@ -24,6 +24,7 @@ export default async (ctx) => {
     return;
   }
 
+  // Answer callback immediately (Telegram expires callbacks after a short time)
   try {
     await ctx.answerCbQuery({ text: '⏳ در حال بررسی اتصال و دریافت آمار...', show_alert: false });
   } catch (_) {}
@@ -32,7 +33,11 @@ export default async (ctx) => {
     const server = await findServerByDatabaseID(serverId);
     if (!server) {
       console.log(`[serverDetailHandler] Server not found: id=${serverId}`);
-      await ctx.answerCbQuery({ text: 'سرور یافت نشد', show_alert: true }).catch(() => {});
+      try {
+        await ctx.editMessageText('❌ سرور یافت نشد.', { reply_markup: { inline_keyboard: [[{ text: '🔙 بازگشت به لیست سرورها', callback_data: 'server_list' }]] } });
+      } catch (_) {
+        await ctx.reply('❌ سرور یافت نشد.').catch(() => {});
+      }
       return;
     }
 
@@ -61,7 +66,11 @@ export default async (ctx) => {
   } catch (error) {
     console.error('[serverDetailHandler] Error:', error);
     try {
-      await ctx.answerCbQuery({ text: 'خطا در نمایش اطلاعات سرور', show_alert: true });
-    } catch (_) {}
+      await ctx.editMessageText('❌ خطا در نمایش اطلاعات سرور. لطفاً دوباره تلاش کنید.', {
+        reply_markup: { inline_keyboard: [[{ text: '🔙 بازگشت به لیست سرورها', callback_data: 'server_list' }]] }
+      });
+    } catch (_) {
+      await ctx.reply('❌ خطا در نمایش اطلاعات سرور.').catch(() => {});
+    }
   }
 };

@@ -20,7 +20,7 @@ const STEP_LABELS = {
   serverPath: 'مسیر پنل (اختیاری - برای رد کردن «-» بفرستید)',
   userName: 'نام کاربری پنل',
   userPassword: 'رمز عبور پنل',
-  remark: 'توضیحات (اختیاری - برای رد کردن «-» بفرستید)'
+  remark: 'Remark سرور (ابتدای نام اشتراک‌ها، مثلاً client - اختیاری، برای رد کردن «-» بفرستید)'
 };
 
 export default async (ctx) => {
